@@ -1,0 +1,33 @@
+# podman-compose.yml
+#
+# Alternative to scripts/podman-run.sh, for anyone who prefers Compose
+# syntax. Works with either `podman-compose` (pip package) or the newer
+# built-in `podman compose` (podman 4.7+).
+#
+#   podman-compose -f podman-compose.yml up --build
+#   podman-compose -f podman-compose.yml down
+#
+version: "3"
+
+services:
+  linux-mentor:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: linux-mentor
+    ports:
+      - "3000:3000"
+    environment:
+      # host.containers.internal is podman's DNS name for the host machine,
+      # reachable when the container has its own network namespace (i.e.
+      # not --network=host). This is what lets the container reach Ollama
+      # running natively on the Fedora host at 127.0.0.1:11434.
+      - OLLAMA_ENDPOINT=http://host.containers.internal:11434
+    volumes:
+      - ./chats:/app/chats:Z
+      - ./settings.json:/app/settings.json:Z
+    # Ensures host.containers.internal resolves even on older podman/compose
+    # combinations that don't add it automatically.
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+    restart: unless-stopped

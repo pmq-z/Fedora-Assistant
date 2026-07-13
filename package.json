@@ -1,0 +1,27 @@
+{
+  "name": "kde-linux-mentor",
+  "version": "1.0.0",
+  "description": "A local AI desktop assistant for Fedora KDE Plasma, powered by Ollama (llama3.2:3b). Explains Linux, troubleshoots issues, and guides desktop ricing.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "fedora",
+    "kde-plasma",
+    "ollama",
+    "llama3",
+    "linux-assistant",
+    "ricing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
