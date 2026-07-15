@@ -26,13 +26,16 @@
   // ---------------------------------------------------------------------
 
   const state = {
-    messages: [],           // [{role: 'user'|'assistant', content}]
-    currentFilename: null,  // set once the chat has been saved at least once
-    settings: null,
-    isGenerating: false,
-    requestId: null,
-    savedChats: [],
-  };
+  messages: [],
+  currentFilename: null,
+  settings: null,
+  isGenerating: false,
+  requestId: null,
+  savedChats: [],
+
+  documentContext: null,
+  documentName: null,
+};
 
   const PROMPT_TEMPLATES = [
     { label: 'Explain a command', prompt: 'Can you explain what this command does, step by step, before I run it: ' },
@@ -61,6 +64,12 @@
   const errorBanner = el('errorBanner');
   const errorBannerText = el('errorBannerText');
   const sidebar = el('sidebar');
+
+  const pdfInput = el('pdfInput');
+const attachPdfBtn = el('attachPdfBtn');
+const pdfIndicator = el('pdfIndicator');
+const pdfNameEl = el('pdfName');
+const removePdfBtn = el('removePdfBtn');
 
   marked.setOptions({
     breaks: true,
@@ -242,9 +251,17 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: state.messages.slice(0, -1).map(({ role, content }) => ({ role, content })),
-          requestId: state.requestId,
-        }),
+  messages: state.messages
+    .slice(0, -1)
+    .map(({ role, content }) => ({
+      role,
+      content,
+    })),
+
+  requestId: state.requestId,
+  documentContext: state.documentContext,
+  documentName: state.documentName,
+}),
         signal: controller.signal,
       });
 
@@ -456,11 +473,13 @@
   }
 
   function newChat() {
-    state.messages = [];
-    state.currentFilename = null;
-    chatTitleEl.textContent = 'New Chat';
-    renderAll();
-  }
+  state.messages = [];
+  state.currentFilename = null;
+  chatTitleEl.textContent = 'New Chat';
+
+  clearPdf();
+  renderAll();
+}
 
   // ---------------------------------------------------------------------
   // 6. Export (.md / .json) - saves to /chats and triggers a browser download
@@ -590,6 +609,16 @@
   }
 
   function bindEvents() {
+
+    attachPdfBtn.addEventListener('click', () => {
+  if (!state.isGenerating) {
+    pdfInput.click();
+  }
+});
+
+pdfInput.addEventListener('change', handlePdfUpload);
+removePdfBtn.addEventListener('click', clearPdf);
+
     composerForm.addEventListener('submit', (e) => {
       e.preventDefault();
       sendMessage(messageInput.value);
@@ -686,6 +715,78 @@
       list.appendChild(div);
     });
   }
+
+  // FUNCIONES PARA ADJUNTAR PDF
+  async function handlePdfUpload(event) {
+  const file = event.target.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  if (
+    file.type !== 'application/pdf' &&
+    !file.name.toLowerCase().endsWith('.pdf')
+  ) {
+    showError('Please select a PDF file.');
+    pdfInput.value = '';
+    return;
+  }
+
+  hideError();
+
+  attachPdfBtn.disabled = true;
+  attachPdfBtn.textContent = '…';
+
+  const formData = new FormData();
+  formData.append('pdf', file);
+
+  try {
+    const response = await fetch('/api/chat/pdf', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'The PDF could not be read.');
+    }
+
+    state.documentContext = data.text;
+    state.documentName = data.filename;
+
+    pdfNameEl.textContent =
+      `${data.filename} · ${data.pages} page${data.pages === 1 ? '' : 's'}` +
+      (data.truncated ? ' · text limited' : '');
+
+    pdfIndicator.hidden = false;
+
+    messageInput.placeholder =
+      'Ask something about the attached PDF…';
+
+    messageInput.focus();
+  } catch (error) {
+    clearPdf();
+    showError(error.message);
+  } finally {
+    attachPdfBtn.disabled = false;
+    attachPdfBtn.textContent = '📎';
+    pdfInput.value = '';
+  }
+}
+
+function clearPdf() {
+  state.documentContext = null;
+  state.documentName = null;
+
+  pdfIndicator.hidden = true;
+  pdfNameEl.textContent = '';
+  pdfInput.value = '';
+
+  messageInput.placeholder =
+    'Ask about Fedora, KDE, ricing, scripting…';
+}
 
   // ---------------------------------------------------------------------
   // 10. Drag & drop import, health check, misc helpers
