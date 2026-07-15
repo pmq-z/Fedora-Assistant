@@ -96,21 +96,91 @@
       </div>
 
       <form class="composer" id="composerForm">
-        <div class="composer-box">
-          <span class="prompt-glyph" aria-hidden="true">❯</span>
-          <textarea
-            id="messageInput"
-            rows="1"
-            placeholder="Ask about Fedora, KDE, ricing, scripting… (Enter to send, Shift+Enter for newline)"
-            autofocus
-          ></textarea>
-          <button type="button" class="btn btn-icon" id="stopBtn" title="Stop generation" hidden>■</button>
-          <button type="submit" class="btn btn-send" id="sendBtn" title="Send">
-            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 12l18-9-6 9 6 9z" fill="currentColor"/></svg>
-          </button>
-        </div>
-        <div class="composer-hint">Enter to send · Shift+Enter for newline · Ctrl+N new chat · Ctrl+S save · Ctrl+O open · Ctrl+, settings</div>
-      </form>
+
+  <!-- Información del PDF seleccionado -->
+  <div class="pdf-indicator" id="pdfIndicator" hidden>
+    <span>📄</span>
+
+    <span id="pdfName"></span>
+
+    <button
+      type="button"
+      id="removePdfBtn"
+      class="pdf-remove"
+      title="Remove PDF"
+    >
+      ✕
+    </button>
+  </div>
+
+  <!-- Selector de PDF oculto -->
+  <input
+    type="file"
+    id="pdfInput"
+    accept="application/pdf,.pdf"
+    hidden
+  />
+
+  <!-- Caja para escribir el mensaje -->
+  <div class="composer-box">
+
+    <span class="prompt-glyph" aria-hidden="true">
+      ❯
+    </span>
+
+    
+  📎
+</button>
+
+    <!-- Botón para seleccionar un PDF -->
+    <button
+      type="button"
+      class="btn btn-ghost btn-attach"
+      id="attachPdfBtn"
+      title="Attach PDF"
+    >
+      📎
+    </button>
+
+    <textarea
+      id="messageInput"
+      rows="1"
+      placeholder="Ask something or attach a PDF…"
+      autofocus
+    ></textarea>
+
+    <button
+      type="button"
+      class="btn btn-icon"
+      id="stopBtn"
+      title="Stop generation"
+      hidden
+    >
+      ■
+    </button>
+
+    <button
+      type="submit"
+      class="btn btn-send"
+      id="sendBtn"
+      title="Send"
+    >
+      <svg viewBox="0 0 24 24" width="18" height="18">
+        <path
+          d="M3 12l18-9-6 9 6 9z"
+          fill="currentColor"
+        />
+      </svg>
+    </button>
+
+  </div>
+
+  <div class="composer-hint">
+    Enter to send · Shift+Enter for newline · Attach PDF with 📎 ·
+    Ctrl+N new chat · Ctrl+S save · Ctrl+O open · Ctrl+, settings
+  </div>
+
+</form>
     </main>
   </div>
 
