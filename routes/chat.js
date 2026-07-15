@@ -17,15 +17,95 @@
  */
 
 const express = require('express');
+
+//PDF
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+
 const { streamChat, checkOllamaHealth, OllamaError } = require('../api/ollama');
+
 const { readSettings } = require('./settings');
 const { SYSTEM_PROMPT } = require('../prompts/system-prompt');
 
 const router = express.Router();
 
+// El PDF se guarda temporalmente en la memoria y no en el disco
+const MAX_PDF_SIZE = 10 * 1024 * 1024;
+const MAX_PDF_TEXT_LENGTH = 50000;
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+
+  limits: {
+    fileSize: MAX_PDF_SIZE,
+  },
+
+  fileFilter: (req, file, callback) => {
+    const isPdf =
+      file.mimetype === 'application/pdf' ||
+      file.originalname.toLowerCase().endsWith('.pdf');
+
+    if (!isPdf) {
+      return callback(new Error('Only PDF files are allowed.'));
+    }
+
+    callback(null, true);
+  },
+});
+
 // Tracks in-flight generations so the "Stop" button can cancel them.
 // Keyed by a client-generated requestId.
 const activeRequests = new Map();
+
+// Endpoint para leer el PDF
+// POST /api/chat/pdf
+// Receives a PDF and extracts its text locally.
+router.post('/pdf', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No PDF file was provided.',
+      });
+    }
+
+    const result = await pdfParse(req.file.buffer);
+
+    const extractedText = result.text
+      .replace(/\u0000/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    if (!extractedText) {
+      return res.status(400).json({
+        error:
+          'No text could be extracted. The PDF may contain scanned images and require OCR.',
+      });
+    }
+
+    const wasTruncated =
+      extractedText.length > MAX_PDF_TEXT_LENGTH;
+
+    const text = extractedText.slice(
+      0,
+      MAX_PDF_TEXT_LENGTH
+    );
+
+    res.json({
+      filename: req.file.originalname,
+      pages: result.numpages,
+      text,
+      truncated: wasTruncated,
+    });
+  } catch (error) {
+    console.error('PDF extraction error:', error);
+
+    res.status(500).json({
+      error: 'The PDF could not be read.',
+      details: error.message,
+    });
+  }
+});
 
 // GET /api/chat/health - is Ollama reachable, and which models does it have?
 router.get('/health', async (req, res) => {
@@ -36,7 +116,12 @@ router.get('/health', async (req, res) => {
 
 // POST /api/chat/stream - stream a completion for the given message history
 router.post('/stream', async (req, res) => {
-  const { messages, requestId } = req.body || {};
+  const {
+    messages,
+    requestId,
+    documentContext,
+    documentName,
+  } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'A non-empty "messages" array is required.' });
@@ -46,7 +131,36 @@ router.post('/stream', async (req, res) => {
 
   // Always prepend the fixed system prompt, regardless of what the client sent,
   // so the assistant's persona can never be dropped or overridden accidentally.
-  const fullMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages];
+  const fullMessages = [
+    {
+      role: 'system',
+      content: SYSTEM_PROMPT,
+    },
+  ];
+
+  if (
+    typeof documentContext === 'string' &&
+    documentContext.trim()
+    ) {
+      fullMessages.push({
+        role: 'system',
+        content: `
+      The user attached a PDF named "${documentName || 'document.pdf'}".
+
+    Use the following extracted PDF text as reference when answering.
+    Do not invent information that is not present in the document.
+    If the requested information is not present, say so clearly.
+
+    --- BEGIN PDF CONTENT ---
+
+${documentContext.slice(0, MAX_PDF_TEXT_LENGTH)}
+
+--- END PDF CONTENT ---
+    `.trim(),
+  });
+}
+
+fullMessages.push(...messages);
 
   res.writeHead(200, {
     'Content-Type': 'application/x-ndjson; charset=utf-8',

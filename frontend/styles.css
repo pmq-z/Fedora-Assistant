@@ -436,6 +436,7 @@ input, textarea, select { font-family: inherit; }
   backdrop-filter: blur(2px);
 }
 
+/* Hide modal overlay when hidden attribute is present */
 .modal-overlay[hidden] {
   display: none;
 }
