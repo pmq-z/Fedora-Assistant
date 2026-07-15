@@ -396,6 +396,55 @@ input, textarea, select { font-family: inherit; }
    Composer (terminal-prompt signature element)
    ========================================================================= */
 .composer { padding: 12px 24px 18px; flex-shrink: 0; }
+
+.pdf-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 900px;
+  margin: 0 auto 8px;
+  padding: 8px 12px;
+
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  font-size: 12px;
+}
+
+.pdf-indicator[hidden] {
+  display: none;
+}
+
+#pdfName {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pdf-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdf-remove:hover {
+  color: var(--danger);
+}
+
+.btn-attach {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 16px;
+}
+
 .composer-box {
   display: flex;
   align-items: flex-end;
