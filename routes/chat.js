@@ -1,19 +1,8 @@
 /**
- * routes/chat.js
- *
  * HTTP surface for talking to the model. The frontend keeps the full
  * conversation history client-side and sends it with every request (Ollama
  * itself is stateless between calls), which keeps the server simple and
  * makes "load an old chat" trivial - it's just an array of messages.
- *
- * Streaming protocol:
- *   The response is `application/x-ndjson` (newline-delimited JSON), one
- *   small object per line:
- *     {"type":"token","content":"..."}   - a chunk of assistant text
- *     {"type":"done"}                    - generation finished normally
- *     {"type":"error","message":"..."}   - something went wrong
- *   This is simpler than SSE to produce/consume for a POST body stream and
- *   plays nicely with the fetch() + ReadableStream reader used client-side.
  */
 
 const express = require('express');
@@ -103,10 +92,7 @@ function spreadsheetToText(buffer) {
  * POST /api/chat/document
  *
  * Accepts a single file (.txt, .md, .pdf, .csv, .xlsx, .xls) and extracts
- * its text entirely offline - nothing is sent anywhere. The extracted text
- * is returned to the client, which holds onto it and sends it back with
- * the next /stream request so the model can answer questions grounded in
- * the document's actual contents.
+ * its text entirely offline.
  */
 router.post('/document', (req, res, next) => {
   upload.single('document')(req, res, (err) => {

@@ -1,6 +1,4 @@
 /**
- * routes/chats.js
- *
  * Persists conversations to disk as plain files inside /chats. Everything is
  * file-based on purpose - there is no database, which keeps the project easy
  * to read, back up, and version-control.

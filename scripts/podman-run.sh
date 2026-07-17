@@ -1,7 +1,4 @@
-#!/usr/bin/env bash
-#
-# scripts/podman-run.sh
-#
+#! 
 # Convenience wrapper for building and running Linux Mentor as a rootless
 # podman container on Fedora, with chats/ and settings.json persisted on
 # the host via bind mounts.

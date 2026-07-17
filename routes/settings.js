@@ -1,6 +1,4 @@
 /**
- * routes/settings.js
- *
  * Persists user-configurable settings (model name, Ollama endpoint,
  * temperature, top_p, max tokens, theme) to settings.json on disk so they
  * survive restarts. Kept intentionally simple - a single JSON file is more

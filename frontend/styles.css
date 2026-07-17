@@ -82,16 +82,6 @@
 
 * { box-sizing: border-box; }
 
-/* The `hidden` attribute must always win over a component's own `display`
-   rule. Per the CSS cascade, an author-stylesheet `display` declaration
-   (e.g. `.modal-overlay { display: flex }`) always beats the browser's
-   built-in `[hidden] { display: none }` rule, REGARDLESS of selector
-   specificity - origin/importance is resolved before specificity. Without
-   this override, any element that both uses `hidden` and belongs to a
-   class that sets `display` (modals, the error banner, the attached-doc
-   chip, the stop/send buttons) stays visibly on screen even after being
-   "closed" - exactly the bug where a modal wouldn't close and blocked
-   interaction with everything behind it. This single rule is the fix. */
 [hidden] { display: none !important; }
 
 html, body {
@@ -105,16 +95,8 @@ html, body {
 
 button, input, textarea, select { font-family: inherit; }
 ::selection { background: var(--phosphor); color: var(--screen-bg); }
-caret-color: var(--phosphor-strong);
+html, body { caret-color: var(--phosphor-strong); }
 
-/* Scrollbars: thin phosphor-tinted */
-/* Scrollbars: thin phosphor-tinted.
-   Chromium/WebKit browsers use the ::-webkit-scrollbar pseudo-elements
-   below. Firefox ignores those entirely and instead reads the two
-   standardized properties here (scrollbar-width/scrollbar-color) - without
-   them Firefox falls back to its default OS scrollbar, which reads as
-   basically invisible against this dark theme. Both are needed to cover
-   every browser. */
 html { scrollbar-width: thin; scrollbar-color: var(--border-bright) transparent; }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }

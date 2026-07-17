@@ -1,5 +1,3 @@
-# podman-compose.yml
-#
 # Alternative to scripts/podman-run.sh, for anyone who prefers Compose
 # syntax. Works with either `podman-compose` (pip package) or the newer
 # built-in `podman compose` (podman 4.7+).

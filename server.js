@@ -1,6 +1,4 @@
 /**
- * server.js
- *
  * Entry point. Responsibilities:
  *   1. Serve the static frontend (frontend/).
  *   2. Mount the API routers (chat, chats, settings).

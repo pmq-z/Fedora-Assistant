@@ -1,5 +1,3 @@
-# Containerfile
-#
 # Built and run with podman (Fedora's native, daemonless, rootless-by-default
 # container engine) - see the "Running with Podman" section in README.md.
 # This file has no Docker-specific syntax, so `docker build` also works

@@ -1,6 +1,4 @@
 /**
- * script.js
- *
  * Vanilla JS, no framework - the whole app is a handful of clearly-scoped
  * functions operating on one `state` object.
  *
@@ -87,9 +85,8 @@
     gfm: true,
   });
 
-  // ---------------------------------------------------------------------
+
   // 2. Init
-  // ---------------------------------------------------------------------
 
   async function init() {
     renderTemplates();
@@ -103,9 +100,8 @@
     setInterval(autoSave, 60000);
   }
 
-  // ---------------------------------------------------------------------
+
   // 3. Rendering
-  // ---------------------------------------------------------------------
 
   function renderAll() {
     messagesEl.innerHTML = '';
@@ -225,9 +221,8 @@
     errorBanner.hidden = true;
   }
 
-  // ---------------------------------------------------------------------
+
   // 4. Sending messages & streaming
-  // ---------------------------------------------------------------------
 
   async function sendMessage(text) {
     if (!text.trim() || state.isGenerating) return;
@@ -371,9 +366,8 @@
     }
   }
 
-  // ---------------------------------------------------------------------
+
   // 5. Save / Load / Delete / Search chats
-  // ---------------------------------------------------------------------
 
   async function saveChat() {
     if (state.messages.length === 0) return;
@@ -483,9 +477,8 @@
     renderAll();
   }
 
-  // ---------------------------------------------------------------------
+  
   // 6. Export (.md / .json) - saves to /chats and triggers a browser download
-  // ---------------------------------------------------------------------
 
   async function exportChat(format) {
     if (state.messages.length === 0) return;
@@ -515,9 +508,8 @@
     URL.revokeObjectURL(url);
   }
 
-  // ---------------------------------------------------------------------
+
   // 7. Settings modal
-  // ---------------------------------------------------------------------
 
   async function loadSettings() {
     const res = await fetch('/api/settings');
@@ -564,9 +556,8 @@
     document.body.dataset.theme = resolved;
   }
 
-  // ---------------------------------------------------------------------
+
   // 8. Templates & welcome suggestions
-  // ---------------------------------------------------------------------
 
   function renderTemplates() {
     templateListEl.innerHTML = '';
@@ -601,9 +592,8 @@
     });
   }
 
-  // ---------------------------------------------------------------------
+
   // 9. Keyboard shortcuts & composer UX
-  // ---------------------------------------------------------------------
 
   function autosizeTextarea() {
     messageInput.style.height = 'auto';
@@ -714,11 +704,10 @@
     });
   }
 
-  // ---------------------------------------------------------------------
+
   // 10. Document attach (.txt / .md / .pdf / .csv / .xlsx) - fully offline,
   //     the file is parsed server-side by routes/chat.js's /document
   //     endpoint and never leaves the machine.
-  // ---------------------------------------------------------------------
 
   const SUPPORTED_DOC_EXTENSIONS = ['.txt', '.md', '.markdown', '.pdf', '.csv', '.xlsx', '.xls'];
 
@@ -781,9 +770,8 @@
     messageInput.placeholder = 'ask about fedora, kde, ricing, scripting, or an attached file…';
   }
 
-  // ---------------------------------------------------------------------
+
   // 11. Drag & drop import, health check, misc helpers
-  // ---------------------------------------------------------------------
 
   function handleFileDrop(e) {
     e.preventDefault();
