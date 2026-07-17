@@ -10,7 +10,7 @@ const { URL } = require('url');
 
 // A generous but finite timeout so a hung Ollama process doesn't hang the
 // whole app forever. The user gets a friendly error instead.
-const REQUEST_TIMEOUT_MS = 60_000;
+const REQUEST_TIMEOUT_MS = 600_000;
 
 /**
  * Custom error type so routes can distinguish "Ollama isn't running" /

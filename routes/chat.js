@@ -31,7 +31,7 @@ const router = express.Router();
 
 // El PDF se guarda temporalmente en la memoria y no en el disco
 const MAX_PDF_SIZE = 10 * 1024 * 1024;
-const MAX_PDF_TEXT_LENGTH = 50000;
+const MAX_PDF_TEXT_LENGTH = 100000;
 
 const upload = multer({
   storage: multer.memoryStorage(),
