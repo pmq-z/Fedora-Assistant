@@ -1,0 +1,8 @@
+node_modules
+chats/*.txt
+chats/*.md
+chats/*.json
+.git
+.gitignore
+*.log
+.env

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LINUX_MENTOR // fedora.kde.terminal</title>
+
+<!-- VT323 gives the headers/brand an authentic low-res CRT bitmap feel;
+     JetBrains Mono carries body text/code at sizes VT323 can't do cleanly. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Markdown rendering + syntax highlighting (CDN, no bundler needed) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="dark">
+
+  <!-- CRT monitor bezel wrapper: everything renders "on screen" inside this -->
+  <div class="crt-bezel">
+    <div class="crt-screen">
+
+      <!-- Scanlines + vignette overlays sit above the UI, pointer-events disabled -->
+      <div class="crt-scanlines" aria-hidden="true"></div>
+      <div class="crt-vignette" aria-hidden="true"></div>
+      <div class="crt-flicker" aria-hidden="true"></div>
+
+      <div class="app">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside class="sidebar" id="sidebar">
+
+          <div class="brand">
+            <div class="brand-glyph" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26">
+                <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                <circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>
+                <path d="M12 2.5v19M2.5 12h19" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>
+                <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="brand-text">
+              <span class="brand-title">LINUX_MENTOR</span>
+              <span class="brand-sub">fedora&gt;kde-plasma6&gt;ollama</span>
+            </div>
+          </div>
+
+          <div class="hatch-divider" aria-hidden="true"></div>
+
+          <button class="btn btn-primary btn-block" id="newChatBtn" title="Ctrl+N">
+            <span class="icon">+</span> NEW_SESSION
+          </button>
+
+          <div class="sidebar-search">
+            <span class="field-prefix">/</span>
+            <input type="text" id="chatSearchInput" placeholder="search saved logs…" autocomplete="off" />
+          </div>
+
+          <nav class="sidebar-section">
+            <div class="sidebar-section-title">// saved chats</div>
+            <div class="chat-list" id="chatList">
+              <div class="chat-list-empty">no saved sessions yet</div>
+            </div>
+          </nav>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">// templates</div>
+            <div class="template-list" id="templateList"><!-- populated by script.js --></div>
+          </div>
+
+          <div class="sidebar-footer">
+            <div class="ollama-status" id="ollamaStatus" title="Ollama connection status">
+              <span class="status-dot" id="statusDot"></span>
+              <span id="statusText">checking ollama…</span>
+            </div>
+            <div class="token-counter" id="tokenCounter" title="Estimated context usage">~0 tok</div>
+            <button class="btn btn-ghost btn-block" id="settingsBtn" title="Ctrl+,">⚙ SETTINGS</button>
+          </div>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+
+        <!-- ================= MAIN CHAT AREA ================= -->
+        <main class="main">
+
+          <header class="chat-header">
+            <div class="chat-title"><span class="prompt-glyph-inline">❯</span> <span id="chatTitle">new_session</span></div>
+            <div class="chat-header-actions">
+              <button class="btn btn-ghost btn-sm" id="exportMdBtn">.md</button>
+              <button class="btn btn-ghost btn-sm" id="exportJsonBtn">.json</button>
+              <button class="btn btn-ghost btn-sm" id="saveChatBtn" title="Ctrl+S">SAVE</button>
+            </div>
+          </header>
+
+          <div class="messages" id="messages">
+            <div class="welcome" id="welcome">
+              <pre class="welcome-ascii" aria-hidden="true">
+    ___       ___       ___       ___       ___
+   /\  \     /\  \     /\  \     /\  \     /\__\
+  /::\  \   /::\  \   /::\  \   /::\  \   /:/  /
+ /::\:\__\ /::\:\__\ /::\:\__\ /::\:\__\ /:/__/
+ \:\::/  / \/\::/  / \:\::/  / \:\::/  / \:\  \
+  \::/  /    /:/  /   \::/  /   \::/  /   \:\__\
+   \/__/     \/__/     \/__/     \/__/     \/__/
+              </pre>
+              <h1>LINUX_MENTOR v1.0</h1>
+              <p class="welcome-lede">&gt; local fedora / kde plasma mentor, running entirely offline via ollama.<br/>&gt; nothing you type ever leaves this machine.<br/>&gt; attach a .txt, .md, .pdf, .csv, or .xlsx file to ask questions about it.</p>
+              <div class="welcome-suggestions" id="welcomeSuggestions"><!-- populated by script.js --></div>
+            </div>
+          </div>
+
+          <div class="banner banner-error" id="errorBanner" hidden>
+            <span class="banner-icon">⚠</span>
+            <span id="errorBannerText"></span>
+            <button class="banner-close" id="errorBannerClose">✕</button>
+          </div>
+
+          <form class="composer" id="composerForm">
+
+            <!-- Attached document indicator -->
+            <div class="doc-indicator" id="docIndicator" hidden>
+              <span class="doc-indicator-icon" id="docIndicatorIcon">▤</span>
+              <span id="docIndicatorName"></span>
+              <button type="button" id="removeDocBtn" class="doc-remove" title="Remove attachment">✕</button>
+            </div>
+
+            <!-- Hidden native file input; supports plain text, markdown, PDF, CSV, and Excel -->
+            <input
+              type="file"
+              id="documentInput"
+              accept=".txt,.md,.markdown,.pdf,.csv,.xlsx,.xls,text/plain,text/markdown,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              hidden
+            />
+
+            <div class="composer-box">
+              <span class="prompt-glyph" aria-hidden="true">❯</span>
+
+              <button
+                type="button"
+                class="btn btn-ghost btn-attach"
+                id="attachDocBtn"
+                title="Attach a document (.txt, .md, .pdf, .csv, .xlsx)"
+              >⎗</button>
+
+              <textarea
+                id="messageInput"
+                rows="1"
+                placeholder="ask about fedora, kde, ricing, scripting, or an attached file…"
+                autofocus
+              ></textarea>
+
+              <button type="button" class="btn btn-icon" id="stopBtn" title="Stop generation" hidden>■</button>
+              <button type="submit" class="btn btn-send" id="sendBtn" title="Send">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 12l18-9-6 9 6 9z" fill="currentColor"/></svg>
+              </button>
+            </div>
+
+            <div class="composer-hint">enter=send · shift+enter=newline · attach ⎗ · ctrl+n new · ctrl+s save · ctrl+o open · ctrl+, settings</div>
+          </form>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SETTINGS MODAL ================= -->
+  <div class="modal-overlay" id="settingsModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>// settings</h2>
+        <button class="modal-close" id="settingsCloseBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span>model name</span>
+          <input type="text" id="settingModel" placeholder="llama3.2:3b" />
+        </label>
+        <label class="field">
+          <span>ollama endpoint</span>
+          <input type="text" id="settingEndpoint" placeholder="http://localhost:11434" />
+        </label>
+        <label class="field">
+          <span>temperature <em id="tempVal"></em></span>
+          <input type="range" id="settingTemperature" min="0" max="2" step="0.05" />
+        </label>
+        <label class="field">
+          <span>top_p <em id="topPVal"></em></span>
+          <input type="range" id="settingTopP" min="0" max="1" step="0.05" />
+        </label>
+        <label class="field">
+          <span>max tokens</span>
+          <input type="number" id="settingMaxTokens" min="64" step="64" />
+        </label>
+        <label class="field">
+          <span>theme</span>
+          <select id="settingTheme">
+            <option value="dark">dark (phosphor green)</option>
+            <option value="light">light (amber paper)</option>
+            <option value="system">system</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="settingsCancelBtn">cancel</button>
+        <button class="btn btn-primary" id="settingsSaveBtn">save_settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LOAD CHAT (Ctrl+O) MODAL ================= -->
+  <div class="modal-overlay" id="openChatModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>// open saved session</h2>
+        <button class="modal-close" id="openChatCloseBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="openChatSearch" placeholder="filter sessions…" autocomplete="off" />
+        <div class="chat-list" id="openChatList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
